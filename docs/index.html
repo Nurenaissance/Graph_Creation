@@ -1,0 +1,518 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/css/tom-select.min.css" integrity="sha512-43fHB3GLgZfz8QXl1RPQ8O66oIgv3po9cJ5erMt1c4QISq9dYb195T3vr5ImnJPXuVroKcGBPXBFKETW8jrPNQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/js/tom-select.complete.js" integrity="sha512-jeF9CfnvzDiw9G9xiksVjxR2lib44Gnovvkv+3CgCG6NXCD4gqlA5nDAVW5WjpA+i+/zKsUWV5xNEbW1X/HH0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 900px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+                <div id="select-menu" class="card-header">
+                    <div class="row no-gutters">
+                        <div class="col-10 pb-2">
+                            <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="selectNode([value]);"
+                            id="select-node"
+                            placeholder="Select node..."
+                            >
+                                <option selected>Select a Node by ID</option>
+                                
+                                    <option value="alappuzha">alappuzha</option>
+                                
+                                    <option value="bachelor of technology">bachelor of technology</option>
+                                
+                                    <option value="pacelab">pacelab</option>
+                                
+                                    <option value="providence college of engineering">providence college of engineering</option>
+                                
+                                    <option value="shibin s p">shibin s p</option>
+                                
+                                    <option value="st.george higher secondary school">st.george higher secondary school</option>
+                                
+                                    <option value="android application">android application</option>
+                                
+                                    <option value="face recognition">face recognition</option>
+                                
+                                    <option value="frontend development">frontend development</option>
+                                
+                                    <option value="medicine vending machine">medicine vending machine</option>
+                                
+                                    <option value="angular framework">angular framework</option>
+                                
+                                    <option value="angular/react">angular/react</option>
+                                
+                                    <option value="full stack development">full stack development</option>
+                                
+                                    <option value="apj abdul kalam technological university">apj abdul kalam technological university</option>
+                                
+                                    <option value="app hosting">app hosting</option>
+                                
+                                    <option value="github">github</option>
+                                
+                                    <option value="arduino ide">arduino ide</option>
+                                
+                                    <option value="esp32">esp32</option>
+                                
+                                    <option value="artificial intelligence">artificial intelligence</option>
+                                
+                                    <option value="artificial intelligence workshop">artificial intelligence workshop</option>
+                                
+                                    <option value="national institute of technology (nit), calicut">national institute of technology (nit), calicut</option>
+                                
+                                    <option value="collaborative approach">collaborative approach</option>
+                                
+                                    <option value="communication skills">communication skills</option>
+                                
+                                    <option value="computer science and engineering">computer science and engineering</option>
+                                
+                                    <option value="frontend developer">frontend developer</option>
+                                
+                                    <option value="higher secondary education">higher secondary education</option>
+                                
+                                    <option value="institution of engineering and technology">institution of engineering and technology</option>
+                                
+                                    <option value="ui ux designer">ui ux designer</option>
+                                
+                                    <option value="ui/ux design">ui/ux design</option>
+                                
+                                    <option value="css">css</option>
+                                
+                                    <option value="html">html</option>
+                                
+                                    <option value="database">database</option>
+                                
+                                    <option value="mongodb">mongodb</option>
+                                
+                                    <option value="english">english</option>
+                                
+                                    <option value="professional working proficiency">professional working proficiency</option>
+                                
+                                    <option value="express.js">express.js</option>
+                                
+                                    <option value="figma">figma</option>
+                                
+                                    <option value="google firebase">google firebase</option>
+                                
+                                    <option value="great learning">great learning</option>
+                                
+                                    <option value="humanoid walking robot workshop">humanoid walking robot workshop</option>
+                                
+                                    <option value="indian institute of technology (iit), roorkee">indian institute of technology (iit), roorkee</option>
+                                
+                                    <option value="iot">iot</option>
+                                
+                                    <option value="nest digital">nest digital</option>
+                                
+                                    <option value="opencv">opencv</option>
+                                
+                                    <option value="python">python</option>
+                                
+                                    <option value="real-time database">real-time database</option>
+                                
+                                    <option value="ui/ux design fundamentals">ui/ux design fundamentals</option>
+                                
+                                    <option value="full professional proficiency">full professional proficiency</option>
+                                
+                                    <option value="malayalam">malayalam</option>
+                                
+                                    <option value="internship">internship</option>
+                                
+                                    <option value="luminar technolab">luminar technolab</option>
+                                
+                                    <option value="mern full-stack development intern">mern full-stack development intern</option>
+                                
+                                    <option value="node.js">node.js</option>
+                                
+                                    <option value="programming language">programming language</option>
+                                
+                                    <option value="skill enhancement">skill enhancement</option>
+                                
+                                    <option value="typescript">typescript</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-primary btn-block" onclick="neighbourhoodHighlight({nodes: []});">Reset Selection</button>
+                        </div>
+                    </div>
+                </div>
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+                  new TomSelect("#select-node",{
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      }
+                  });
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"group": 1, "id": "alappuzha", "label": "alappuzha", "shape": "dot", "size": 5}, {"group": 1, "id": "bachelor of technology", "label": "bachelor of technology", "shape": "dot", "size": 16}, {"group": 1, "id": "pacelab", "label": "pacelab", "shape": "dot", "size": 16}, {"group": 1, "id": "providence college of engineering", "label": "providence college of engineering", "shape": "dot", "size": 16}, {"group": 1, "id": "shibin s p", "label": "shibin s p", "shape": "dot", "size": 16}, {"group": 1, "id": "st.george higher secondary school", "label": "st.george higher secondary school", "shape": "dot", "size": 16}, {"group": 2, "id": "android application", "label": "android application", "shape": "dot", "size": 3}, {"group": 2, "id": "face recognition", "label": "face recognition", "shape": "dot", "size": 26}, {"group": 2, "id": "frontend development", "label": "frontend development", "shape": "dot", "size": 31}, {"group": 2, "id": "medicine vending machine", "label": "medicine vending machine", "shape": "dot", "size": 26}, {"group": 2, "id": "angular framework", "label": "angular framework", "shape": "dot", "size": 3}, {"group": 3, "id": "angular/react", "label": "angular/react", "shape": "dot", "size": 1}, {"group": 3, "id": "full stack development", "label": "full stack development", "shape": "dot", "size": 16}, {"group": 1, "id": "apj abdul kalam technological university", "label": "apj abdul kalam technological university", "shape": "dot", "size": 5}, {"group": 2, "id": "app hosting", "label": "app hosting", "shape": "dot", "size": 4}, {"group": 2, "id": "github", "label": "github", "shape": "dot", "size": 4}, {"group": 2, "id": "arduino ide", "label": "arduino ide", "shape": "dot", "size": 4}, {"group": 2, "id": "esp32", "label": "esp32", "shape": "dot", "size": 4}, {"group": 1, "id": "artificial intelligence", "label": "artificial intelligence", "shape": "dot", "size": 5}, {"group": 2, "id": "artificial intelligence workshop", "label": "artificial intelligence workshop", "shape": "dot", "size": 4}, {"group": 2, "id": "national institute of technology (nit), calicut", "label": "national institute of technology (nit), calicut", "shape": "dot", "size": 4}, {"group": 1, "id": "collaborative approach", "label": "collaborative approach", "shape": "dot", "size": 5}, {"group": 1, "id": "communication skills", "label": "communication skills", "shape": "dot", "size": 5}, {"group": 1, "id": "computer science and engineering", "label": "computer science and engineering", "shape": "dot", "size": 5}, {"group": 1, "id": "frontend developer", "label": "frontend developer", "shape": "dot", "size": 5}, {"group": 1, "id": "higher secondary education", "label": "higher secondary education", "shape": "dot", "size": 5}, {"group": 1, "id": "institution of engineering and technology", "label": "institution of engineering and technology", "shape": "dot", "size": 5}, {"group": 1, "id": "ui ux designer", "label": "ui ux designer", "shape": "dot", "size": 5}, {"group": 1, "id": "ui/ux design", "label": "ui/ux design", "shape": "dot", "size": 12}, {"group": 2, "id": "css", "label": "css", "shape": "dot", "size": 4}, {"group": 2, "id": "html", "label": "html", "shape": "dot", "size": 4}, {"group": 2, "id": "database", "label": "database", "shape": "dot", "size": 4}, {"group": 2, "id": "mongodb", "label": "mongodb", "shape": "dot", "size": 7}, {"group": 3, "id": "english", "label": "english", "shape": "dot", "size": 2}, {"group": 3, "id": "professional working proficiency", "label": "professional working proficiency", "shape": "dot", "size": 2}, {"group": 3, "id": "express.js", "label": "express.js", "shape": "dot", "size": 1}, {"group": 2, "id": "figma", "label": "figma", "shape": "dot", "size": 4}, {"group": 2, "id": "google firebase", "label": "google firebase", "shape": "dot", "size": 4}, {"group": 2, "id": "great learning", "label": "great learning", "shape": "dot", "size": 7}, {"group": 2, "id": "humanoid walking robot workshop", "label": "humanoid walking robot workshop", "shape": "dot", "size": 4}, {"group": 2, "id": "indian institute of technology (iit), roorkee", "label": "indian institute of technology (iit), roorkee", "shape": "dot", "size": 4}, {"group": 2, "id": "iot", "label": "iot", "shape": "dot", "size": 3}, {"group": 2, "id": "nest digital", "label": "nest digital", "shape": "dot", "size": 3}, {"group": 2, "id": "opencv", "label": "opencv", "shape": "dot", "size": 3}, {"group": 2, "id": "python", "label": "python", "shape": "dot", "size": 3}, {"group": 2, "id": "real-time database", "label": "real-time database", "shape": "dot", "size": 4}, {"group": 2, "id": "ui/ux design fundamentals", "label": "ui/ux design fundamentals", "shape": "dot", "size": 4}, {"group": 3, "id": "full professional proficiency", "label": "full professional proficiency", "shape": "dot", "size": 2}, {"group": 3, "id": "malayalam", "label": "malayalam", "shape": "dot", "size": 2}, {"group": 3, "id": "internship", "label": "internship", "shape": "dot", "size": 2}, {"group": 3, "id": "luminar technolab", "label": "luminar technolab", "shape": "dot", "size": 2}, {"group": 3, "id": "mern full-stack development intern", "label": "mern full-stack development intern", "shape": "dot", "size": 2}, {"group": 3, "id": "node.js", "label": "node.js", "shape": "dot", "size": 1}, {"group": 3, "id": "programming language", "label": "programming language", "shape": "dot", "size": 2}, {"group": 3, "id": "skill enhancement", "label": "skill enhancement", "shape": "dot", "size": 2}, {"group": 3, "id": "typescript", "label": "typescript", "shape": "dot", "size": 2}]);
+                  edges = new vis.DataSet([{"from": "alappuzha", "title": "contextual proximity", "to": "bachelor of technology", "width": 0.5}, {"from": "alappuzha", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "alappuzha", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "alappuzha", "title": "contextual proximity", "to": "shibin s p", "width": 1.0}, {"from": "alappuzha", "title": "St.George Higher Secondary School is located in Muttar, Alappuzha.,contextual proximity", "to": "st.george higher secondary school", "width": 1.5}, {"from": "android application", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "android application", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "android application", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "angular framework", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "angular framework", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "angular framework", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "angular/react", "title": "contextual proximity", "to": "full stack development", "width": 1.0}, {"from": "apj abdul kalam technological university", "title": "contextual proximity", "to": "bachelor of technology", "width": 0.5}, {"from": "apj abdul kalam technological university", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "apj abdul kalam technological university", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "apj abdul kalam technological university", "title": "contextual proximity", "to": "shibin s p", "width": 1.0}, {"from": "apj abdul kalam technological university", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "app hosting", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "app hosting", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "app hosting", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "app hosting", "title": "GitHub is used for app hosting and version control of the Android application.", "to": "github", "width": 1.0}, {"from": "arduino ide", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "arduino ide", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "arduino ide", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "arduino ide", "title": "ESP32 and Arduino IDE are used in the development of the IoT-based Automatic Medicine Vending Machine.", "to": "esp32", "width": 1.0}, {"from": "artificial intelligence", "title": "contextual proximity", "to": "bachelor of technology", "width": 0.5}, {"from": "artificial intelligence", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "artificial intelligence", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "artificial intelligence", "title": "contextual proximity", "to": "shibin s p", "width": 1.0}, {"from": "artificial intelligence", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "artificial intelligence workshop", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "artificial intelligence workshop", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "artificial intelligence workshop", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "artificial intelligence workshop", "title": "The Artificial Intelligence workshop was organized by the National Institute of Technology (NIT), Calicut.", "to": "national institute of technology (nit), calicut", "width": 1.0}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "collaborative approach", "width": 0.5}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "communication skills", "width": 0.5}, {"from": "bachelor of technology", "title": "Shibin holds a Bachelor of Technology in Computer Science and Engineering, indicating his educational background.,contextual proximity", "to": "computer science and engineering", "width": 1.5}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "frontend developer", "width": 0.5}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "higher secondary education", "width": 0.5}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "institution of engineering and technology", "width": 0.5}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "pacelab", "width": 1.0}, {"from": "bachelor of technology", "title": "The Bachelor of Technology degree was obtained from Providence College of Engineering.,contextual proximity", "to": "providence college of engineering", "width": 2.0}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "shibin s p", "width": 2.0}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 1.0}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "ui ux designer", "width": 0.5}, {"from": "bachelor of technology", "title": "contextual proximity", "to": "ui/ux design", "width": 0.5}, {"from": "collaborative approach", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "collaborative approach", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "collaborative approach", "title": "SHIBIN\u0027s collaborative approach is emphasized as a key asset in project contributions.,contextual proximity", "to": "shibin s p", "width": 2.0}, {"from": "collaborative approach", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "communication skills", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "communication skills", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "communication skills", "title": "SHIBIN S P claims to have effective communication skills, which enhance his collaboration on projects.,contextual proximity", "to": "shibin s p", "width": 2.0}, {"from": "communication skills", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "computer science and engineering", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "computer science and engineering", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "computer science and engineering", "title": "contextual proximity", "to": "shibin s p", "width": 1.0}, {"from": "computer science and engineering", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "css", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "css", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "css", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "css", "title": "Html and CSS are essential skills gained during the Frontend Development program.", "to": "html", "width": 1.0}, {"from": "database", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "database", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "database", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "database", "title": "MongoDB is utilized as a secure and scalable storage database for the Attendance Management System.", "to": "mongodb", "width": 1.0}, {"from": "english", "title": "contextual proximity", "to": "full stack development", "width": 1.0}, {"from": "english", "title": "English proficiency is described as Professional Working Proficiency, indicating language skills.", "to": "professional working proficiency", "width": 1.0}, {"from": "esp32", "title": "contextual proximity", "to": "face recognition", "width": 0.5}, {"from": "esp32", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "esp32", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "express.js", "title": "contextual proximity", "to": "full stack development", "width": 1.0}, {"from": "face recognition", "title": "contextual proximity", "to": "figma", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "frontend development", "width": 1.0}, {"from": "face recognition", "title": "contextual proximity", "to": "github", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "google firebase", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "great learning", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "html", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "humanoid walking robot workshop", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "indian institute of technology (iit), roorkee", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "iot", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "medicine vending machine", "width": 1.0}, {"from": "face recognition", "title": "contextual proximity", "to": "mongodb", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "national institute of technology (nit), calicut", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "nest digital", "width": 0.5}, {"from": "face recognition", "title": "OpenCV is a framework used along with Python for face recognition in the Attendance Management System.,contextual proximity", "to": "opencv", "width": 1.5}, {"from": "face recognition", "title": "Python is used for implementing Face Recognition in the Attendance Management System.,contextual proximity", "to": "python", "width": 1.5}, {"from": "face recognition", "title": "contextual proximity", "to": "real-time database", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "ui/ux design", "width": 0.5}, {"from": "face recognition", "title": "contextual proximity", "to": "ui/ux design fundamentals", "width": 0.5}, {"from": "figma", "title": "contextual proximity", "to": "frontend development", "width": 0.5}, {"from": "figma", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "figma", "title": "Figma is employed for UI/UX design in the development of the Android Application.", "to": "ui/ux design", "width": 1.0}, {"from": "frontend developer", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "frontend developer", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "frontend developer", "title": "SHIBIN S P is identified as a Frontend Developer, indicating his professional role.,contextual proximity", "to": "shibin s p", "width": 2.0}, {"from": "frontend developer", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "github", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "google firebase", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "great learning", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "html", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "humanoid walking robot workshop", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "indian institute of technology (iit), roorkee", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "iot", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "medicine vending machine", "width": 1.0}, {"from": "frontend development", "title": "contextual proximity", "to": "mongodb", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "national institute of technology (nit), calicut", "width": 0.5}, {"from": "frontend development", "title": "NeST Digital completed a one-week industrial immersion program on Frontend Development.,contextual proximity", "to": "nest digital", "width": 1.5}, {"from": "frontend development", "title": "contextual proximity", "to": "opencv", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "python", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "real-time database", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "shibin s p", "width": 1.0}, {"from": "frontend development", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "frontend development", "title": "contextual proximity", "to": "ui/ux design", "width": 0.75}, {"from": "frontend development", "title": "contextual proximity", "to": "ui/ux design fundamentals", "width": 0.5}, {"from": "full professional proficiency", "title": "contextual proximity", "to": "full stack development", "width": 1.0}, {"from": "full professional proficiency", "title": "Malayalam proficiency is stated as Full Professional Proficiency, indicating a high level of language skills.", "to": "malayalam", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "great learning", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "internship", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "luminar technolab", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "malayalam", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "mern full-stack development intern", "width": 1.0}, {"from": "full stack development", "title": "MongoDB is part of the skills being learned in the context of full stack development.,contextual proximity", "to": "mongodb", "width": 2.0}, {"from": "full stack development", "title": "Node.js is a technology being learned as part of full stack development.,contextual proximity", "to": "node.js", "width": 2.0}, {"from": "full stack development", "title": "contextual proximity", "to": "professional working proficiency", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "programming language", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "skill enhancement", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "typescript", "width": 1.0}, {"from": "full stack development", "title": "contextual proximity", "to": "ui/ux design", "width": 1.0}, {"from": "github", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "google firebase", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "google firebase", "title": "Google Firebase serves as the real-time database for the Android Application.", "to": "real-time database", "width": 1.0}, {"from": "great learning", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "great learning", "title": "contextual proximity", "to": "mongodb", "width": 0.5}, {"from": "great learning", "title": "The fundamentals of UI/UX Design were learned from Great Learning, indicating an educational relationship.,contextual proximity", "to": "ui/ux design", "width": 1.5}, {"from": "great learning", "title": "Great Learning provided education on the fundamentals of UI/UX design.", "to": "ui/ux design fundamentals", "width": 1.0}, {"from": "higher secondary education", "title": "contextual proximity", "to": "pacelab", "width": 0.5}, {"from": "higher secondary education", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "higher secondary education", "title": "contextual proximity", "to": "shibin s p", "width": 1.0}, {"from": "higher secondary education", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "html", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "humanoid walking robot workshop", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "humanoid walking robot workshop", "title": "The Humanoid Walking Robot workshop was organized by the Indian Institute of Technology (IIT), Roorkee.", "to": "indian institute of technology (iit), roorkee", "width": 1.0}, {"from": "indian institute of technology (iit), roorkee", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "institution of engineering and technology", "title": "The internship at PaceLab was in association with the Institution of Engineering and Technology (IET).,contextual proximity", "to": "pacelab", "width": 1.5}, {"from": "institution of engineering and technology", "title": "contextual proximity", "to": "providence college of engineering", "width": 0.5}, {"from": "institution of engineering and technology", "title": "contextual proximity", "to": "shibin s p", "width": 1.0}, {"from": "institution of engineering and technology", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 0.5}, {"from": "internship", "title": "The internship is sought to apply and enhance development skills.", "to": "skill enhancement", "width": 1.0}, {"from": "iot", "title": "contextual proximity", "to": "medicine vending machine", "width": 0.5}, {"from": "luminar technolab", "title": "The intern position is associated with Luminar Technolab, indicating a workplace relationship.", "to": "mern full-stack development intern", "width": 1.0}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "mongodb", "width": 0.5}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "national institute of technology (nit), calicut", "width": 0.5}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "nest digital", "width": 0.5}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "opencv", "width": 0.5}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "python", "width": 0.5}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "real-time database", "width": 0.5}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "ui/ux design", "width": 0.5}, {"from": "medicine vending machine", "title": "contextual proximity", "to": "ui/ux design fundamentals", "width": 0.5}, {"from": "mongodb", "title": "contextual proximity", "to": "ui/ux design", "width": 0.5}, {"from": "pacelab", "title": "contextual proximity", "to": "providence college of engineering", "width": 1.0}, {"from": "pacelab", "title": "contextual proximity", "to": "shibin s p", "width": 2.0}, {"from": "pacelab", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 1.0}, {"from": "pacelab", "title": "contextual proximity", "to": "ui ux designer", "width": 0.5}, {"from": "pacelab", "title": "contextual proximity", "to": "ui/ux design", "width": 0.5}, {"from": "programming language", "title": "TypeScript is mentioned as a programming language, which is a key skill in software development.", "to": "typescript", "width": 1.0}, {"from": "providence college of engineering", "title": "contextual proximity", "to": "shibin s p", "width": 2.0}, {"from": "providence college of engineering", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 1.0}, {"from": "providence college of engineering", "title": "contextual proximity", "to": "ui ux designer", "width": 0.5}, {"from": "providence college of engineering", "title": "contextual proximity", "to": "ui/ux design", "width": 0.5}, {"from": "shibin s p", "title": "contextual proximity", "to": "st.george higher secondary school", "width": 2.0}, {"from": "shibin s p", "title": "contextual proximity", "to": "ui ux designer", "width": 1.0}, {"from": "shibin s p", "title": "contextual proximity", "to": "ui/ux design", "width": 1.0}, {"from": "st.george higher secondary school", "title": "contextual proximity", "to": "ui ux designer", "width": 0.5}, {"from": "st.george higher secondary school", "title": "contextual proximity", "to": "ui/ux design", "width": 0.5}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "forceAtlas2Based": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.015,
+            "damping": 0.4,
+            "gravitationalConstant": -31,
+            "springConstant": 0.08,
+            "springLength": 100
+        },
+        "solver": "forceAtlas2Based",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+                    network.on("selectNode", neighbourhoodHighlight);
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,94 @@
+SHIBIN S P
+Frontend Developer | UI UX Designer
+As a recent graduate in Computer Science and Engineering, I am excited to bring my blend of technical expertise, creativity, and professionalism to a reputable company. A motivated team player with a strong foundation in front-end development and UI/UX design, I excel in delivering solutions that seamlessly merge functionality with aesthetics. My eﬀective communication skills, logical thinking, and collaborative approach make me an asset to any project. Eager to contribute to your team's success and showcase my skills in a professional setting
+
+
+
+
+
+
+
+
+ 
+EDUCATION
+Bachelor of Technology in Computer Science and Engineering
+Providence College of Engineering
+2019 - 2023,	Chengannur-Alappuzha
+Course
+APJ Abdul Kalam Technological University
+
+Higher Secondary Education in Computer Science
+St.George Higher secondary school
+2019,	Muttar-Alappuzha
+Kerala State Higher Secondary Board
+XII
+
+High School
+St.George Higher Secondary School
+2017,	Muttar-Alappuzha
+
+
+INTERNSHIPS
+Artiﬁcial Intelligence
+PACELAB
+Completed a one-week internship on Artiﬁcial Intelligence (AI) at PaceLab in association with the Institution of Engineering and Technology (IET)
+
+Frontend Development Using Angular Framework
+NeST Digital
+Completed a one-week industrial immersion program on Frontend development using Angular Framework at NeST Digital
+Deployed multiple Angular components and modules/Tasks
+Immersed in Angular-based web development, created user- friendly applications.
+Gained expertise in Html CSS Angular Material, and
+ 
+TECHNICAL SKILLS
+
+
+ 
+
+PROJECTS
+An Attendance Management System using Face Recognition
+Python with OpenCV for face recognition and real-time image processing. MongoDB for secure and scalable storage database , HTML/CSS/JavaScript for a user-friendly web interface designing.
+
+An Android Application based Automatic Medicine Vending machine for Organizations using the Internet of Things
+Created an Android application using Java in Android Studio, integrated with an IoT-based Automatic Medicine Vending Machine using ESP32 and Arduino IDE. Employed Figma for UI/UX design, Google Firebase as the real-time database, and GitHub for app hosting and version control.
+
+
+
+CERTIFICATES
+National Level Workshop on Build Humanoid Walking Robot
+National Level Workshop on Build Humanoid Walking Robot organized by Indian Institute of Technology (IIT), Roorkee
+
+Workshop on Artiﬁcial Intelligence
+Workshop on Artiﬁcial Intelligence Workshop on Artiﬁcial Intelligence organized by National Institute of Technology (NIT), Calicut
+
+Fundamentals of UI/UX Design
+Learned the fundametals of design experience and design aspects from Great Learning
+
+
+LANGUAGES
+ 
+TypeScript.
+
+MEARN Full-Stack Development Intern
+Luminar Technolab
+09/2023 - Present,
+Currently doing internship on full stack development Learning MongoDB, Express.js, Angular/React, and Node.jssks
+Excited to grow in frontend (UI) and backend (DB, API)
+development. Seeking a dynamic internship to apply and enhance skills.
+ 
+English
+Professional Working Proﬁciency
+
+
+SOFT SKILLS
+
+   
+
+ 
+ 
+Malayalam
+Full Professional Proﬁciency
+
+
+
+

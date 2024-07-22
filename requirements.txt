@@ -1,0 +1,9 @@
+langchain
+langchain_community
+pandas
+numpy
+networkx
+seaborn
+pyvis
+python-docx
+unstructured
